@@ -1,0 +1,71 @@
+{
+  "name": "@rabbx/overseer",
+  "version": "1.0.0",
+  "description": "Universal process overseer and file watcher for Node.js, Bun, and Deno.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "overseer": "./dist/bin/overseer",
+    "ovs": "./dist/bin/overseer",
+    "ovsbun": "./dist/bin/overseer-bun",
+    "ovsdeno": "./dist/bin/overseer-deno",
+    "ovsnode": "./dist/bin/overseer-node"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "readme.md",
+    "license.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@rabbx/colors": "^1.0.0",
+    "@rabbx/config": "^1.0.0",
+    "@rabbx/ms": "^1.0.0",
+    "@rabbx/watcher": "^1.0.0",
+    "cac": "^6.7.14",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "overseer",
+    "watcher",
+    "hot-reload",
+    "supervisor",
+    "process-manager",
+    "nodemon",
+    "bun",
+    "deno",
+    "node",
+    "cli"
+  ],
+  "author": "rabbxdev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rabbxdev/overseer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rabbxdev/overseer/issues"
+  },
+  "homepage": "https://github.com/rabbxdev/overseer#readme"
+}
