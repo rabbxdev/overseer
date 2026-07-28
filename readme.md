@@ -1,5 +1,8 @@
-# @rabbx/overseer
-
+<p align="center">
+  <img src="./logo.svg" width="160" />
+</p>
+<h1 align="center">@rabbx/overseer</h1>
+<p align="center">Universal File Watcher + Process Reloader</p>
 A universal process overseer and file watcher for **Node.js**, **Bun**, and **Deno**.
 
 Built to survive the realities of local development: it watches files, gracefully restarts processes on changes, automatically injects required Deno permissions, and acts as a supervisor to keep your app alive if it crashes.

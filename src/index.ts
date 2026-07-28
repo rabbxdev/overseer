@@ -2,7 +2,7 @@
 import { watch, type Watcher, type WatcherOptions } from '@rabbx/watcher';
 import { ms } from '@rabbx/ms';
 import { cyan, green, red, yellow, dim, bold } from '@rabbx/colors';
-import {   
+import {
   type Plugin,
   type PluginContext,
   runHook,
@@ -14,10 +14,10 @@ export { definePlugin } from './plugins.js';
 type Runtime = 'bun' | 'deno' | 'node' | 'unknown';
 
 // --- Log helpers ---
-const logOverseer = (msg: string) => console.log(`${cyan('[rabbx:overseer]')} ${msg}`);
-const logWatcher = (msg: string) => console.log(`${green('[rabbx:watcher]')} ${msg}`);
+const logOverseer = (msg: string) => console.log(`${cyan('[Rabbx overseer]')} ${msg}`);
+const logWatcher = (msg: string) => console.log(`${green('[watcher]')} ${msg}`);
 const logError = (msg: string, err?: unknown) =>
-  console.error(`${red('[rabbx:error]')} ${msg}`, err ?? '');
+  console.error(`${red('[error]')} ${msg}`, err ?? '');
 
 /**
  * Full terminal reset. More reliable than console.clear() which
@@ -88,6 +88,11 @@ let isShuttingDown = false;
 let activePlugins: Plugin[] = [];
 let activeContext: PluginContext | null = null;
 
+/**
+ * Sanitize environment variables for cross-runtime compatibility.
+ * Deno's Command API strictly requires Record<string, string>,
+ * while Node's process.env can contain undefined.
+ */
 function getCleanEnv(): Record<string, string> {
   const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(process.env)) {
@@ -119,6 +124,7 @@ async function spawnNewProcess(opts: ReloadOptions): Promise<ChildProcessHandle 
   let handle: ChildProcessHandle;
 
   if (runtime === 'bun') {
+    // Bun requires stdin/stdout/stderr individually (not stdio array)
     // @ts-ignore
     const subprocess = Bun.spawn([execPath, ...args], {
       env,
@@ -134,8 +140,9 @@ async function spawnNewProcess(opts: ReloadOptions): Promise<ChildProcessHandle 
     };
     if (!opts.keepAlive) subprocess.unref?.();
   } else if (runtime === 'deno') {
+    // Auto-inject required Deno permissions
     const requiredFlags = [
-      '--allow-net', '--allow-read', '--allow-env',
+      '--allow-net', '--allow-read', '--allow-env',"--unstable-sloppy-imports","--allow-write",
       '--allow-run', '--unstable-net',
     ];
     const finalArgs = [...new Set([...requiredFlags, ...args])];
@@ -258,10 +265,17 @@ export async function reloadProcess(opts: ReloadOptions = {}) {
   }
 }
 
-function shouldReload(file: string, include?: string[], exclude?: string[]): boolean {
-  if (exclude?.some(g => globToRegex(g).test(file))) return false;
-  if (include?.length) return include.some(g => globToRegex(g).test(file));
-  return /\.(ts|tsx|js|jsx|mjs|cjs|json)$/.test(file);
+function shouldReload(file: string, include?: string[], exclude?: string[], exts?: string[]): boolean {
+  // Normalize path separators for cross-platform regex matching
+  const normalizedFile = file.replace(/\\/g, '/');
+
+  if (exclude?.some(g => globToRegex(g).test(normalizedFile))) return false;
+  if (include?.length) {
+    return include.some(g => globToRegex(g).test(normalizedFile));
+  }
+  // Default extension filter
+  const extsRegex = new RegExp(`\\.(${(exts ?? ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'json']).join('|')})$`);
+  return extsRegex.test(normalizedFile);
 }
 
 function scheduleRestart(opts: ReloadOptions) {
@@ -287,9 +301,11 @@ export function enableWatchReload(
     keepAlive = false,
     clearConsole = false,
     plugins = [],
+    exts,
     ...rest
   } = watchOpts;
 
+  // Store plugins and context for hook invocations
   activePlugins = plugins;
   activeContext = {
     runtime: detectRuntime(),
@@ -308,6 +324,7 @@ export function enableWatchReload(
     logOverseer(`Plugins: ${dim(plugins.map(p => p.name).join(', '))}`);
   }
 
+  // Fire onStart hook
   if (activeContext) {
     runHook('onStart', activePlugins, activeContext).catch(() => {});
   }
@@ -321,7 +338,7 @@ export function enableWatchReload(
 
   watcher.on('all', async (event, file) => {
     if (reloading || isShuttingDown) return;
-    if (!shouldReload(file, include, exclude)) return;
+    if (!shouldReload(file, include, exclude, exts)) return;
 
     if (activeContext) {
       const vetoed = await runHook('onFileChange', activePlugins, activeContext, event, file);
@@ -362,6 +379,7 @@ export function enableWatchReload(
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 
+  // Handle post-reload logic if this process was spawned by a previous reload
   if (process.env.__RELOADED === '1') {
     watchOpts.onAfterReload?.();
     if (process.env.__CHANGED_FILES) {

@@ -1,10 +1,10 @@
 
 import cac from 'cac';
-import { watch, type Watcher } from '@rabbx/watcher'; 
+import { watch, type Watcher } from '@rabbx/watcher';  
 import { ms } from '@rabbx/ms';
-import { cyan, green, red, yellow, dim, bold } from '@rabbx/colors';
-import { resolve, isAbsolute, dirname, relative } from 'node:path';
-import { existsSync, statSync } from 'node:fs';
+import colors,{ cyan, green, red, yellow, dim, bold } from '@rabbx/colors';
+import { resolve, isAbsolute, dirname, relative } from 'path';
+import { existsSync, statSync } from 'fs';
 import { z } from 'zod';
 import { loadAny } from '@rabbx/config';
 import {
@@ -15,17 +15,17 @@ import {
 
 // --- Global error handlers ---
 process.on('uncaughtException', (err) => {
-  console.error(`${red('[overseer]')} Uncaught exception:`, err);
+  console.error(`${red('[Rabbx overseer]')} Uncaught exception:`, err);
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason) => {
-  console.error(`${red('[overseer]')} Unhandled rejection:`, reason);
+  console.error(`${red('[Rabbx overseer]')} Unhandled rejection:`, reason);
   process.exit(1);
 });
 
 // --- Log helpers ---
-const logOverseer = (msg: string) => console.log(`${cyan('[overseer]')} ${msg}`);
+const logOverseer = (msg: string) => console.log(`${cyan('[Rabbx overseer]')} ${msg}`);
 const logWatcher = (msg: string) => console.log(`${green('[watcher]')} ${msg}`);
 const logError = (msg: string, err?: unknown) =>
   console.error(`${red('[error]')} ${msg}`, err ?? '');
@@ -111,8 +111,7 @@ async function spawnChild(
 
   if (runtime === 'deno') {
     const requiredFlags = [
-      '--allow-net', '--allow-read', '--allow-env',
-      '--allow-run', '--unstable-net',
+      "-A"
     ];
     const finalArgs = [...new Set([...requiredFlags, script, ...scriptArgs])];
 
@@ -136,7 +135,7 @@ async function spawnChild(
   }
 
   if (runtime === 'node') {
-    const { spawn } = await import('node:child_process');
+    const { spawn } = await import('child_process');
     const child = spawn(execPath, [script, ...scriptArgs], {
       env,
       stdio: 'inherit',
@@ -250,10 +249,10 @@ async function resolveConfig(
 }
 
 // --- Main CLI ---
-const cli = cac('overseer');
+const cli = cac('Rabbx overseer');
 
 cli
-  .command('<script> [...args]', 'Oversee a script with auto-reload')
+  .command('<script> [...args]', 'Rabbx Oversee a script with auto-reload')
   .option('-w, --watch <paths>', 'Paths to watch (comma-separated)', { default: './' })
   .option('--include <globs>', 'Glob patterns to include (comma-separated)')
   .option('--exclude <globs>', 'Glob patterns to exclude (comma-separated)')
@@ -300,7 +299,7 @@ cli
       args: scriptArgs,
     };
 
-    logOverseer(`Starting ${bold(script)} with ${bold(runtime)}`);
+    logOverseer(`Starting ${bold(script)} with ${colors.greenBright(bold(runtime))}`);
     
     // --- FIX: Ensure we ONLY pass directories to the watcher ---
     const rawWatchPaths = Array.isArray(currentConfig.watch) ? currentConfig.watch : [currentConfig.watch!];
@@ -464,7 +463,7 @@ cli
         watcher = null;
       }
 
-      logWatcher('Goodbye!');
+      logWatcher(colors.greenBright('Goodbye!'));
       process.exit(0);
     };
 
@@ -491,18 +490,19 @@ cli
         : null;
 
       const isConfigChange = absoluteConfigPath && normalizedFile === absoluteConfigPath;
-
+   const { config: newConfig } = await resolveConfig(cliFlags, rawOptions.config);
+          currentConfig = newConfig;
       if (isConfigChange) {
         logOverseer(`Config file changed: ${dim(file)}. Reloading config and restarting...`);
         try {
-          const { config: newConfig } = await resolveConfig(cliFlags, rawOptions.config);
-          currentConfig = newConfig;
+        const vetoed = await runHook('onFileChange', currentPlugins, ctx, event, normalizedFile);
+        if (vetoed) return; 
           
           changedFiles.add(file);
           scheduleRestart();
           return;
         } catch (err) {
-          logError(`Failed to reload config (keeping old config):`, err);
+          logError(`Failed to reload config (keeping old config):`, err); 
           return;
         }
       }
@@ -512,23 +512,24 @@ cli
         // logWatcher(`${dim('[filtered]')} ${event}: ${file}`);
         return;
       }
-
-      const currentPlugins = (currentConfig.plugins as Plugin[]) ?? [];
-      
+    if(!isConfigChange){
+      const currentPlugins = (currentConfig?.plugins as Plugin[]) ?? [];
+      if (currentConfig.clearConsole) {
+       clearTerminal();
+      }
       const vetoed = await runHook('onFileChange', currentPlugins, ctx, event, normalizedFile);
-      if (vetoed) return;
-
+      if (vetoed) return; 
+ 
       changedFiles.add(file);
       const color = event === 'change' ? yellow : cyan;
 
-      if (currentConfig.clearConsole) {
-        clearTerminal();
-      }
+      
 
-      logWatcher(`${color(event)}: ${dim(file)}`);
+      logWatcher(`${color(event)}: ${dim(file)}`);  
       
       scheduleRestart();
-      console.log(currentPlugins,"curr")
+      
+    }
     });
 
     process.on('SIGINT', shutdown);
@@ -542,5 +543,5 @@ cli
   });
 
 cli.help();
-cli.version('1.0.0');
+cli.version('1.0.1');
 cli.parse();

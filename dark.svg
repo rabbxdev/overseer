@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">  
+  <defs>
+    <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFAA00"/>
+      <stop offset="100%" stop-color="#FF3D00"/>
+    </linearGradient>
+    <filter id="neonGlow">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feFlood flood-color="#FF5500" flood-opacity="0.8"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="64" fill="#0A0A0A"/>
+  <g filter="url(#neonGlow)">
+    <path d="M256 100C156 100 80 176 80 256C80 336 156 412 256 412C356 412 432 336 432 256C432 176 356 100 256 100Z" fill="url(#neonGrad)" opacity="0.2"/>
+    <path d="M256 140C192 140 140 192 140 256C140 320 192 372 256 372C320 372 372 320 372 256C372 192 320 140 256 140Z" fill="url(#neonGrad)"/>
+    <circle cx="256" cy="256" r="50" fill="#0A0A0A"/>
+    <circle cx="256" cy="256" r="25" fill="url(#neonGrad)"/>
+  </g>
+  <g stroke="url(#neonGrad)" stroke-width="6" stroke-linecap="round" opacity="0.9">
+    <circle cx="256" cy="256" r="200" fill="none" stroke-dasharray="20 40"/>
+  </g>
+</svg>

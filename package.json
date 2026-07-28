@@ -28,7 +28,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "prepublishOnly": "npm run build"
+   "prepublishOnly": "npm run build"
+  
   },
   "dependencies": {
     "@rabbx/colors": "^1.0.0",

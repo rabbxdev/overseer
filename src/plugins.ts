@@ -1,10 +1,10 @@
 // src/plugins.ts
-import { red, dim, bold } from '@rabbx/colors';
+import { red, dim, bold } from '@rabbx/colors'; 
 
 export interface PluginContext {
   /** Current runtime: 'node' | 'bun' | 'deno' */
   runtime: 'node' | 'bun' | 'deno' | 'unknown';
-  /** Path to the script being overseen */
+  /** Path to the script being overseen */ 
   script: string;
   /** Arguments passed to the script */
   args: string[];
@@ -94,6 +94,7 @@ export async function runHook<K extends keyof Plugin>(
 
     try {
       const result = await hook(...args, ctx);
+      
       if (hookName === 'onFileChange' && result === false) {
         vetoed = true;
       }

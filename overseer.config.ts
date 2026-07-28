@@ -3,12 +3,18 @@ import { definePlugin } from '@rabbx/overseer';
 
 const myPlugin = definePlugin({
   name: 'my-plugin',
-  onFileChange(_event, file) {
-     
-    console.log(_event,file,"co")
+ onBeforeSpawn:async (ev,f)=>{
+   return ev
+   console.log(ev,f,"b4") 
+    return true
   },
+  onFileChange: async (_event, file,ctx)=>{ 
+     
+    console.log(_event,file,ctx,"co")
+    return true
+  }, 
 }); 
-
+ 
 export default defineConfig({
   watch: ['./src',"./examples"],
   include: ['**/*.ts'],
