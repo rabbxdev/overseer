@@ -13,7 +13,7 @@ import { enableWatchReload } from '../dist/index.js';
 const server = createServer((req, res) => {
  
   res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end(`Hello World! node  Process PID: ${process.pid}\n`);
+  res.end(`Hello World! node tru  Process PID: ${process.pid}\n`);
 });
 
 const PORT = 3000;

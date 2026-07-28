@@ -28,7 +28,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-   "prepublishOnly": "npm run build"
+   "types": "tsc --emitDeclarationOnly --declaration --rootDir src --outDir dist",
+   "prepublishOnly": "bun run build"
+   
   
   },
   "dependencies": {

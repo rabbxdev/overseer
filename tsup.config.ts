@@ -43,7 +43,7 @@ if command -v bun >/dev/null 2>&1; then
   exec bun "$CLI" "$@"
 fi
 if command -v deno >/dev/null 2>&1; then
-  exec deno run --allow-all "$CLI" "$@"
+  exec deno run -A --unstable-sloppy-imports --unstable-net "$CLI" "$@"
 fi
 if command -v node >/dev/null 2>&1; then
   exec node "$CLI" "$@"
@@ -77,7 +77,7 @@ while [ -L "$SCRIPT_PATH" ]; do
   SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
   case "$SCRIPT_PATH" in /*) ;; *) SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH" ;; esac
 done
-exec deno run --allow-all "$(cd "$(dirname "$SCRIPT_PATH")" && pwd)/cli.js" "$@"
+exec deno run -A --unstable-sloppy-imports --unstable-net "$(cd "$(dirname "$SCRIPT_PATH")" && pwd)/cli.js" "$@"
 `,
 };
 
@@ -96,11 +96,7 @@ export default defineConfig({
   },
   format: ['esm'],
   shims:true,
-  dts: {
-    entry: {
-      index: 'src/index.ts',
-    },
-  },
+  dts:false,
   esbuildPlugins: [addNodeImportPrefix()],
   esbuildOptions(options, context) {
     options.platform = "neutral"

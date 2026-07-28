@@ -1,5 +1,5 @@
 // src/index.ts
-import { watch, type Watcher, type WatcherOptions } from '@rabbx/watcher';
+import { watch, type Watcher } from '@rabbx/watcher';
 import { ms } from '@rabbx/ms';
 import { cyan, green, red, yellow, dim, bold } from '@rabbx/colors';
 import {
@@ -66,7 +66,7 @@ export interface ReloadOptions {
   onAfterReload?: () => void;
 }
 
-export interface WatchOptions extends Omit<WatcherOptions, 'ignored'> {
+export interface WatchOptions{ //extends Omit<WatcherOptions, 'ignored'> {
   paths?: string | string[];
   include?: string[];
   exclude?: string[];

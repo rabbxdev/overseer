@@ -490,11 +490,12 @@ cli
         : null;
 
       const isConfigChange = absoluteConfigPath && normalizedFile === absoluteConfigPath;
-   const { config: newConfig } = await resolveConfig(cliFlags, rawOptions.config);
-          currentConfig = newConfig;
+   
       if (isConfigChange) {
         logOverseer(`Config file changed: ${dim(file)}. Reloading config and restarting...`);
         try {
+          const { config: newConfig } = await resolveConfig(cliFlags, rawOptions.config);
+          currentConfig = newConfig;
         const vetoed = await runHook('onFileChange', currentPlugins, ctx, event, normalizedFile);
         if (vetoed) return; 
           
@@ -513,9 +514,11 @@ cli
         return;
       }
     if(!isConfigChange){
+      const { config: newConfig } = await resolveConfig(cliFlags, rawOptions.config);
+          currentConfig = newConfig;
       const currentPlugins = (currentConfig?.plugins as Plugin[]) ?? [];
       if (currentConfig.clearConsole) {
-       clearTerminal();
+       clearTerminal(); 
       }
       const vetoed = await runHook('onFileChange', currentPlugins, ctx, event, normalizedFile);
       if (vetoed) return; 

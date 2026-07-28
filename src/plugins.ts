@@ -4,7 +4,7 @@ import { red, dim, bold } from '@rabbx/colors';
 export interface PluginContext {
   /** Current runtime: 'node' | 'bun' | 'deno' */
   runtime: 'node' | 'bun' | 'deno' | 'unknown';
-  /** Path to the script being overseen */ 
+  /** Path to the script being overseen */  
   script: string;
   /** Arguments passed to the script */
   args: string[];
